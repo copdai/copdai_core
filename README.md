@@ -1,1 +1,2 @@
-# copdai_core
+# COPDAI CORE
+core package
