@@ -20,6 +20,7 @@ clean:
 	rm -rf *.egg-info
 	rm -rf docs/_build/*
 	rm -rf htmlcov
+	rm -rf .eggs
 
 bootstrap: virtualenv
 	venv/bin/pip3 install -e .
