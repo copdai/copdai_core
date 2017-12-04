@@ -1,2 +1,2 @@
 # COPDAI CORE
-core package
+Collaborative Open Platform for Distributed Artificial Intelligence core package

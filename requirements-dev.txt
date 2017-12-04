@@ -1,0 +1,18 @@
+# Runtime requirements
+--requirement requirements.txt
+
+# Testing
+coverage
+pytest>=2.6.0
+tox
+
+# Linting
+flake8
+mccabe
+
+# Documentation
+Sphinx
+
+# Miscellaneous
+Paver
+colorama
