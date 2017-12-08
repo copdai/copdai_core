@@ -2,6 +2,7 @@ from copdai_core.commun import ReturnCodes
 from enum import Enum, unique
 import sys
 import os
+import signal
 import subprocess
 import logging
 from logging.handlers import RotatingFileHandler
@@ -51,6 +52,8 @@ class Agent(object):
         self.state = AgentState.UNKNOWN
         self.name = name
         self.id = id
+        # register to handle USR1 signal
+        signal.signal(signal.SIGUSR1, self.signal_usr1)
 
 
     def invoke(self):
@@ -82,6 +85,14 @@ class Agent(object):
         log.debug("Agent go to active state")
         self.state = AgentState.ACTIVE
         return ReturnCodes.SUCCESS
+
+    def signal_usr1(self, signum, frame):
+        """
+        Callback invoked when a USR1 signal is received
+        :param frame:
+        :return:
+        """
+        log.debug("Agent Received USR1 signal from")
 
     #TODO state destroy and create
 
