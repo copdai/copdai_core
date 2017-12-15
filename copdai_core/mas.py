@@ -94,57 +94,22 @@ class AbstractAgent(ABC):
 
         self._state = AgentState.INITIATED
 
-    def continue_handling_signal(self, target_agent_state):
-        if target_agent_state == self._state:
-            log.debug('Agent already in %s state' % target_agent_state.name)
-            return False
-        elif target_agent_state == AgentState.SUSPENDED and self._state == AgentState.ACTIVE:
-            return True
-        elif target_agent_state == AgentState.WAITING and self._state == AgentState.ACTIVE:
-            return True
-        elif target_agent_state == AgentState.TRANSIT and self._state == AgentState.ACTIVE:
-            return True
-        elif target_agent_state == AgentState.ACTIVE and (self._state == AgentState.WAITING or self._state == AgentState.SUSPENDED or self._state == AgentState.INITIATED or self._state == AgentState.TRANSIT):
-            return True
-        log.debug('Cannot go to %s state, current state is : %s' % (target_agent_state.name, self._state.name))
-        return False
+    def signal_handler(self, signum, frame):
+        if signum == signal.SIGTERM:
+            self.quit()
+        elif signum == signal.SIGKILL:
+            self.destroy()
+        elif signum == signal.SIGSTOP and self._state == AgentState.ACTIVE:
+            self.suspend()
+        elif signum == signal.SIGCONT and self._state == AgentState.SUSPENDED:
+            self.resume()
+        elif signum == signal.SIGUSR1 and self._state == AgentState.WAITING:
+            self.wakeup()
+
 
     @abstractmethod
     def run(self):
         log.debug('starting execution of agent ...')
-
-    def _start(self):
-        if self._run :
-            self.run()
-        signal.pause()
-
-    def signal_usr1(self, signum, frame):
-        """
-        Callback invoked when a USR1 signal is received
-        :param frame:
-        :return:
-        """
-        log.debug("Agent Received USR1 signal from")
-        self.wakeup()
-
-    def signal_term(self, signum, frame):
-        log.debug("receiving signal TERM")
-        self.quit()
-
-    def signal_kill(self, signum, frame):
-        log.debug("receiving signal KILL")
-        self.destroy()
-
-    def signal_stop(self, signum, frame):
-        log.debug("receiving signal STOP")
-        if self.continue_handling_signal(AgentState.SUSPENDED):
-            self.suspend()
-
-    def signal_cont(self, signum, frame):
-        log.debug("receiving signal CONT")
-        if self.continue_handling_signal(AgentState.ACTIVE):
-            self.resume()
-
 
     def resume(self):
         """
@@ -178,10 +143,10 @@ class AbstractAgent(ABC):
         Puts an agent in a waiting state. This can only be initiated by an agent.
         :return:
         """
-        if self.continue_handling_signal(AgentState.WAITING):
-            log.debug("Agent go to wait state")
-            self._state = AgentState.WAITING
-            self._run = False
+        
+        log.debug("Agent go to wait state")
+        self._state = AgentState.WAITING
+        signal.pause()
 
         return ReturnCodes.SUCCESS
 
