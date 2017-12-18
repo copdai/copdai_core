@@ -49,7 +49,8 @@ class AbstractAgent(ABC):
     for accessing software (see [FIPA00079]).
     """
 
-    __slots__ = ['_state', '_platform_id', '_pid', '_aid', '_run']
+    __slots__ = ['_state', '_platform_id', '_pid', '_aid', '_run']  # using slot to declare python object can allow as
+    # control memory allocated and prevent adding additional attribute to an object later
 
     def __init__(self, platform_id=None, name=None):
         super().__init__()
@@ -106,10 +107,31 @@ class AbstractAgent(ABC):
         elif signum == signal.SIGUSR1 and self._state == AgentState.WAITING:
             self.wakeup()
 
+    @abstractmethod
+    def setup(self):
+        """
+        To avoid any device IO problem, retrieving data must be done outside the critical section;
+        All initialization, loading data from disk or similar tasks must be done here
+        :return:
+        """
+        log.debug('Initializing agent ...')
 
     @abstractmethod
     def run(self):
+        """
+        Code to be executed by the agent
+        :return:
+        """
         log.debug('starting execution of agent ...')
+
+    @abstractmethod
+    def teardown(self):
+        """
+        To avoid any device IO problem, writing data must be done outside the critical section;
+        All finalization, writing data to disk or similar tasks must be done here
+        :return:
+        """
+        log.debug('Finalizing the agent ...')
 
     def resume(self):
         """
@@ -143,7 +165,7 @@ class AbstractAgent(ABC):
         Puts an agent in a waiting state. This can only be initiated by an agent.
         :return:
         """
-        
+
         log.debug("Agent go to wait state")
         self._state = AgentState.WAITING
         signal.pause()
